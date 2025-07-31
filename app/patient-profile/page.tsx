@@ -24,28 +24,50 @@ export default function PatientProfile() {
   });
   const router = useRouter();
 
-  useEffect(() => {
-    const userData = localStorage.getItem('patientData');
-    if (!userData) {
+ useEffect(() => {
+  const fetchPatientProfile = async () => {
+    const localData = localStorage.getItem('patientData');
+    if (!localData) {
       router.push('/patient-login');
       return;
     }
-    
-    const patient = JSON.parse(userData);
-    setPatientData(patient);
-    setProfilePicture(patient.profilePicture || null);
-    setFormData({
-      name: patient.name || '',
-      email: patient.email || '',
-      phone: patient.phone || '',
-      dateOfBirth: patient.dateOfBirth || '',
-      address: patient.address || '',
-      emergencyContact: patient.emergencyContact || '',
-      bloodType: patient.bloodType || 'A+',
-      allergies: patient.allergies || 'None',
-      medications: patient.medications || 'None'
-    });
-  }, [router]);
+
+    const { email } = JSON.parse(localData);
+
+    try {
+      const res = await fetch(`http://localhost:3001/patient-profile?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+
+      if (data.length === 0) {
+        throw new Error('Profile not found.');
+      }
+
+      const patient = data[0]; // assuming email is unique
+      setPatientData(patient);
+      setProfilePicture(patient.profilePicture || null);
+      setFormData({
+        name: patient.name || '',
+        email: patient.email || '',
+        phone: patient.phone || '',
+        dateOfBirth: patient.dateOfBirth || '',
+        address: patient.address || '',
+        emergencyContact: patient.emergencyContact || '',
+        bloodType: patient.bloodType || 'A+',
+        allergies: patient.allergies || 'None',
+        medications: patient.medications || 'None'
+      });
+
+      // Keep local storage in sync
+      localStorage.setItem('patientData', JSON.stringify(patient));
+    } catch (err) {
+      console.error('Error loading profile:', err);
+      router.push('/patient-login');
+    }
+  };
+
+  fetchPatientProfile();
+}, [router]);
+
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,23 +81,51 @@ export default function PatientProfile() {
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      // PUT request to update profile
-      const updatedData = await patientAPI.updateProfile(patientData.id, {
-        ...formData,
-        profilePicture: profilePicture || undefined
-      });
-      
-      localStorage.setItem('patientData', JSON.stringify(updatedData));
-      setPatientData(updatedData);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-    } finally {
-      setIsSaving(false);
+  if (!patientData?.id) return;
+  setIsSaving(true);
+  
+  try {
+    const updatedPayload = {
+      ...formData,
+      profilePicture: profilePicture || null,
+      id: patientData.id,
+    };
+
+    // Update patient-profile
+    const res = await fetch(`http://localhost:3001/patient-profile/${patientData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedPayload),
+    });
+
+    if (!res.ok) throw new Error('Failed to update profile');
+
+    const updatedData = await res.json();
+    setPatientData(updatedData);
+    localStorage.setItem('patientData', JSON.stringify(updatedData));
+    setIsEditing(false);
+
+    // 🔁 Also update email in patient-login (if email has changed)
+    if (formData.email !== patientData.email) {
+      const loginRes = await fetch(`http://localhost:3001/patient-login?email=${encodeURIComponent(patientData.email)}`);
+      const loginData = await loginRes.json();
+      if (loginData.length > 0) {
+        const loginUser = loginData[0];
+        await fetch(`http://localhost:3001/patient-login/${loginUser.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email })
+        });
+      }
     }
-  };
+
+  } catch (error) {
+    console.error('Failed to update profile:', error);
+  } finally {
+    setIsSaving(false);
+  }
+};
+
 
   const handleLogout = () => {
     localStorage.removeItem('patientData');
