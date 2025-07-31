@@ -1,0 +1,127 @@
+{
+  "patient-login": [
+    {
+      "email": "john@example.com",
+      "password": "123456",
+      "id": "ace4"
+    },
+    {
+      "email": "alice@example.com",
+      "password": "password123",
+      "id": "3d25"
+    },
+    {
+      "id": "99a4",
+      "name": "kalyan kumar",
+      "email": "kalyan@gmail.com",
+      "password": "123456",
+      "phone": "8639302460",
+      "dateOfBirth": "2004-05-23",
+      "address": "podili",
+      "emergencyContact": "98",
+      "bloodType": "O+",
+      "allergies": "none",
+      "medications": "none",
+      "profilePicture": ""
+    },
+    {
+      "id": "d585",
+      "email": "munjuluri@gmail.com",
+      "password": "123456"
+    },
+    {
+      "id": "3d1e",
+      "email": "someah@gmail.com",
+      "password": "123456"
+    },
+    {
+      "id": "ad96f831-f9c8-4c9b-8217-daca679b3c5a",
+      "email": "Lokesh@gmail.com",
+      "password": "123456"
+    }
+  ],
+  "doctor-login": [
+    {
+      "email": "drsam@example.com",
+      "password": "abc123",
+      "id": "e2cc"
+    },
+    {
+      "email": "clara@example.com",
+      "password": "pass456",
+      "id": "b4fd"
+    },
+    {
+      "id": "6504",
+      "email": "ramesh@gmail.com",
+      "password": "123456"
+    },
+    {
+      "id": "8c68",
+      "email": "ravindra@gmail.com",
+      "password": "123456"
+    },
+    {
+      "id": "2439b496-8173-4066-92a3-52b8d79dd430",
+      "email": "Satish@gmail.com",
+      "password": "123456"
+    }
+  ],
+  "patient-profile": [
+    {
+      "name": "somesh",
+      "email": "somesha@gmail.com",
+      "phone": "908430980",
+      "dateOfBirth": "2025-07-19",
+      "address": "podili",
+      "emergencyContact": "097429070978",
+      "bloodType": "O-",
+      "allergies": "none",
+      "medications": "none",
+      "profilePicture": null,
+      "id": "256f"
+    },
+    {
+      "name": "lokesh",
+      "email": "Lokesh@gmail.com",
+      "phone": "70980928",
+      "dateOfBirth": "2025-07-31",
+      "address": "andhra",
+      "emergencyContact": "8974029890",
+      "bloodType": "O+",
+      "allergies": "none",
+      "medications": "none",
+      "profilePicture": null,
+      "id": "ad96f831-f9c8-4c9b-8217-daca679b3c5a"
+    }
+  ],
+  "doctor-profile": [
+    {
+      "id": "b9b2",
+      "email": "ravindra@gmail.com",
+      "password": "123456",
+      "name": "ravindra",
+      "phone": "7980080909",
+      "specialty": "Cardiologist",
+      "hospital": "City Generic",
+      "experience": "3",
+      "license": "MD-2022",
+      "education": "MBBS ",
+      "about": "specalist in heart realted",
+      "profilePicture": null
+    },
+    {
+      "name": "satish",
+      "email": "Satish@gmail.com",
+      "phone": "874509802",
+      "specialty": "Cardiologist",
+      "hospital": "hospital",
+      "experience": "5",
+      "license": "MD-2002",
+      "education": "MBBS",
+      "about": "specailist in kidney related",
+      "profilePicture": null,
+      "id": "2439b496-8173-4066-92a3-52b8d79dd430"
+    }
+  ]
+}
