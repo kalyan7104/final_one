@@ -8,6 +8,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import Link from 'next/link';
 import { doctorRegistrationSchema } from '@/lib/validationSchemas';
 import { doctorAPI } from '@/lib/api';
+import { v4 as uuidv4 } from 'uuid'; // Ensure this is imported at the top
+
 
 interface DoctorRegistrationForm {
   name: string;
@@ -49,31 +51,46 @@ export default function DoctorRegister() {
     }
   };
 
-  const onSubmit = async (data: DoctorRegistrationForm) => {
-    setIsLoading(true);
-    setApiError('');
-    
-    try {
-      const { confirmPassword, ...doctorData } = data;
-      
-      // POST request to register doctor
-      const doctor = await doctorAPI.register({
+ 
+
+
+const onSubmit = async (data: DoctorRegistrationForm) => {
+  setIsLoading(true);
+  setApiError('');
+
+  try {
+    const { confirmPassword, ...doctorData } = data;
+    const newId = uuidv4(); // shared ID
+
+    // Step 1: POST to doctor-profile
+    await fetch('http://localhost:3001/doctor-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         ...doctorData,
-        profilePicture: profilePicture || undefined
-      });
-      
-      setShowSuccess(true);
-      
-      // Redirect to login page after successful registration
-      setTimeout(() => {
-        router.push('/doctor-login');
-      }, 2000);
-    } catch (error: any) {
-      setApiError(error.message || 'Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        id: newId,
+        profilePicture: profilePicture || ''
+      })
+    });
+
+    // Step 2: POST to doctor-login
+    await fetch('http://localhost:3001/doctor-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: newId,
+        email: doctorData.email,
+      })
+    });
+
+    setShowSuccess(true);
+    setTimeout(() => router.push('/doctor-login'), 2000);
+  } catch (error: any) {
+    setApiError(error.message || 'Registration failed. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   if (showSuccess) {
     return (
