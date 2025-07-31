@@ -23,27 +23,42 @@ export default function DoctorProfile() {
   const router = useRouter();
 
   useEffect(() => {
-    const userData = localStorage.getItem('doctorData');
-    if (!userData) {
+  const fetchDoctorProfile = async () => {
+    const localData = localStorage.getItem('doctorData');
+    if (!localData) {
       router.push('/doctor-login');
       return;
     }
-    
-    const doctor = JSON.parse(userData);
-    setDoctorData(doctor);
-    setProfilePicture(doctor.profilePicture || null);
-    setFormData({
-      name: doctor.name || '',
-      email: doctor.email || '',
-      phone: doctor.phone || '',
-      specialty: doctor.specialty || '',
-      hospital: doctor.hospital || '',
-      experience: doctor.experience || '',
-      license: doctor.license || '',
-      education: doctor.education || 'MD from Medical University',
-      about: doctor.about || 'Experienced medical professional dedicated to providing quality healthcare.'
-    });
-  }, [router]);
+
+    const doctorFromStorage = JSON.parse(localData);
+    try {
+      const response = await fetch(`http://localhost:3001/doctor-profile/${doctorFromStorage.id}`);
+      if (!response.ok) throw new Error('Failed to fetch profile');
+
+      const freshDoctor = await response.json();
+      setDoctorData(freshDoctor);
+      setProfilePicture(freshDoctor.profilePicture || null);
+      localStorage.setItem('doctorData', JSON.stringify(freshDoctor));
+
+      setFormData({
+        name: freshDoctor.name || '',
+        email: freshDoctor.email || '',
+        phone: freshDoctor.phone || '',
+        specialty: freshDoctor.specialty || '',
+        hospital: freshDoctor.hospital || '',
+        experience: freshDoctor.experience || '',
+        license: freshDoctor.license || '',
+        education: freshDoctor.education || 'MD from Medical University',
+        about: freshDoctor.about || 'Experienced medical professional dedicated to providing quality healthcare.'
+      });
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  fetchDoctorProfile();
+}, [router]);
+
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,25 +72,46 @@ export default function DoctorProfile() {
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const updatedData = { 
-        ...doctorData, 
-        ...formData, 
-        profilePicture: profilePicture || undefined 
-      };
-      localStorage.setItem('doctorData', JSON.stringify(updatedData));
-      setDoctorData(updatedData);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-    } finally {
-      setIsSaving(false);
+  if (!doctorData?.id) return;
+  setIsSaving(true);
+
+  try {
+    const updatedPayload = {
+      ...formData,
+      profilePicture: profilePicture || null,
+      id: doctorData.id,
+    };
+
+    // Step 1: Update doctor-profile
+    const res = await fetch(`http://localhost:3001/doctor-profile/${doctorData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedPayload),
+    });
+
+    if (!res.ok) throw new Error('Failed to update profile');
+
+    const updatedDoctor = await res.json();
+    localStorage.setItem('doctorData', JSON.stringify(updatedDoctor));
+    setDoctorData(updatedDoctor);
+
+    // Step 2: PATCH doctor-login email if changed
+    if (formData.email !== doctorData.email) {
+      await fetch(`http://localhost:3001/doctor-login/${doctorData.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
     }
-  };
+
+    setIsEditing(false);
+  } catch (error) {
+    console.error('Error saving profile:', error);
+  } finally {
+    setIsSaving(false);
+  }
+};
+
 
   const handleLogout = () => {
     localStorage.removeItem('doctorData');
@@ -176,7 +212,7 @@ export default function DoctorProfile() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               ) : (
-                <p className="text-gray-900">{doctorData.name}</p>
+                <p className="text-gray-900">{formData.name}</p>
               )}
             </div>
 
@@ -190,7 +226,7 @@ export default function DoctorProfile() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               ) : (
-                <p className="text-gray-900">{doctorData.email}</p>
+                <p className="text-gray-900">{formData.email}</p>
               )}
             </div>
 
@@ -204,7 +240,7 @@ export default function DoctorProfile() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               ) : (
-                <p className="text-gray-900">{doctorData.phone}</p>
+                <p className="text-gray-900">{formData.phone}</p>
               )}
             </div>
 
@@ -218,7 +254,7 @@ export default function DoctorProfile() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               ) : (
-                <p className="text-gray-900">{doctorData.specialty}</p>
+                <p className="text-gray-900">{formData.specialty}</p>
               )}
             </div>
 
@@ -232,7 +268,7 @@ export default function DoctorProfile() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               ) : (
-                <p className="text-gray-900">{doctorData.hospital}</p>
+                <p className="text-gray-900">{formData.hospital}</p>
               )}
             </div>
 
@@ -246,7 +282,7 @@ export default function DoctorProfile() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               ) : (
-                <p className="text-gray-900">{doctorData.experience}</p>
+                <p className="text-gray-900">{formData.experience}</p>
               )}
             </div>
 
