@@ -28,23 +28,31 @@ export default function DoctorLogin() {
   });
 
   const onSubmit = async (data: DoctorLoginForm) => {
-    setIsLoading(true);
-    setApiError('');
-    
-    try {
-      // GET request to check credentials
-      const doctor = await doctorAPI.login(data.email, data.password);
-      
-      localStorage.setItem('userType', 'doctor');
-      localStorage.setItem('doctorData', JSON.stringify(doctor));
-      
-      router.push('/doctor-dashboard');
-    } catch (error: any) {
-      setApiError(error.message || 'Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true);
+  setApiError('');
+
+  try {
+    // GET request to check if email and password match any record
+    const res = await fetch(`http://localhost:3001/doctor-login?email=${encodeURIComponent(data.email)}&password=${encodeURIComponent(data.password)}`);
+    const result = await res.json();
+
+    if (result.length === 0) {
+      throw new Error('Invalid email or password');
     }
-  };
+
+    const doctor = result[0];
+
+    localStorage.setItem('userType', 'doctor');
+    localStorage.setItem('doctorData', JSON.stringify(doctor));
+
+    router.push('/doctor-dashboard');
+  } catch (error: any) {
+    setApiError(error.message || 'Login failed. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
@@ -118,8 +126,8 @@ export default function DoctorLogin() {
 
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-600 mb-2">Demo Account:</p>
-            <p className="text-xs text-gray-600">Email: sarah.johnson@hospital.com</p>
-            <p className="text-xs text-gray-600">Password: password123</p>
+            <p className="text-xs text-gray-600">Email: Satish@gmail.com</p>
+            <p className="text-xs text-gray-600">Password: 123456</p>
           </div>
         </div>
       </div>
