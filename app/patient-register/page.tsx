@@ -8,6 +8,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import Link from 'next/link';
 import { patientRegistrationSchema } from '@/lib/validationSchemas';
 import { patientAPI } from '@/lib/api';
+ import { v4 as uuidv4 } from 'uuid'; // npm install uuid
+
 
 interface PatientRegistrationForm {
   name: string;
@@ -49,31 +51,48 @@ export default function PatientRegister() {
     }
   };
 
-  const onSubmit = async (data: PatientRegistrationForm) => {
-    setIsLoading(true);
-    setApiError('');
-    
-    try {
-      const { confirmPassword, ...patientData } = data;
-      
-      // POST request to register patient
-      const patient = await patientAPI.register({
+ 
+const onSubmit = async (data: PatientRegistrationForm) => {
+  setIsLoading(true);
+  setApiError('');
+  
+  try {
+    const { confirmPassword, ...patientData } = data;
+    const newId = uuidv4(); // Shared ID
+
+    // Step 1: POST to patient-profile with full data
+    await fetch('http://localhost:3001/patient-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         ...patientData,
-        profilePicture: profilePicture || undefined
-      });
-      
-      setShowSuccess(true);
-      
-      // Redirect to login page after successful registration
-      setTimeout(() => {
-        router.push('/patient-login');
-      }, 2000);
-    } catch (error: any) {
-      setApiError(error.message || 'Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        id: newId,
+        profilePicture: profilePicture || ''
+      })
+    });
+
+    // Step 2: POST to patient-login with same id
+    await fetch('http://localhost:3001/patient-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: newId,
+        email: patientData.email,
+        password: patientData.password
+      })
+    });
+
+    // Show success animation
+    setShowSuccess(true);
+    setTimeout(() => router.push('/patient-login'), 2000);
+    
+  } catch (error: any) {
+    setApiError(error.message || 'Registration failed. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   if (showSuccess) {
     return (
