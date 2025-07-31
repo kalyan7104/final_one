@@ -28,23 +28,28 @@ export default function PatientLogin() {
   });
 
   const onSubmit = async (data: PatientLoginForm) => {
-    setIsLoading(true);
-    setApiError('');
-    
-    try {
-      // GET request to check credentials
-      const patient = await patientAPI.login(data.email, data.password);
-      
+  setIsLoading(true);
+  setApiError('');
+
+  try {
+    const res = await fetch(
+      `http://localhost:3001/patient-login?email=${data.email}&password=${data.password}`
+    );
+    const result = await res.json();
+
+    if (result.length > 0) {
       localStorage.setItem('userType', 'patient');
-      localStorage.setItem('patientData', JSON.stringify(patient));
-      
+      localStorage.setItem('patientData', JSON.stringify(result[0]));
       router.push('/patient-dashboard');
-    } catch (error: any) {
-      setApiError(error.message || 'Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+    } else {
+      setApiError('Invalid email or password');
     }
-  };
+  } catch (error: any) {
+    setApiError(error.message || 'Login failed. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
@@ -118,8 +123,8 @@ export default function PatientLogin() {
 
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-600 mb-2">Demo Account:</p>
-            <p className="text-xs text-gray-600">Email: john.smith@email.com</p>
-            <p className="text-xs text-gray-600">Password: password123</p>
+            <p className="text-xs text-gray-600">Email: Lokesh@gmail.com</p>
+            <p className="text-xs text-gray-600">Password: 123456</p>
           </div>
         </div>
       </div>
